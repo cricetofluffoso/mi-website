@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANCHOR1SM'S GATE // ADMIN_CONSOLE</title>
+  <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)" />
+  <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin />
+  <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap)" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-void:#000; --bg-surface:#080808; --bg-hover:#0d0d0d;
+      --accent-neon:#00ff66; --accent-cyan:#00f0ff; --accent-dim:#00ff6633;
+      --accent-cyan-dim:#00f0ff22; --text-primary:#e8e8e8; --text-muted:#4a4a4a;
+      --text-ghost:#222; --border-base:#1a1a1a; --danger:#ff3b3b; --warn:#ffb300;
+      --font-mono:'JetBrains Mono','Fira Code','Consolas',monospace;
+      --radius:2px; --transition:0.18s ease;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      background:var(--bg-void);color:var(--text-primary);font-family:var(--font-mono);
+      font-size:13px;line-height:1.7;min-height:100vh;
+      background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,102,.012) 2px,rgba(0,255,102,.012) 4px);
+    }
+    .view{display:none;} .view.active{display:block;}
+
+    /* ---------- LOGIN ---------- */
+    .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+    .login-box{
+      background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);
+      padding:2.25rem;width:100%;max-width:420px;
+      box-shadow:0 0 0 1px var(--accent-dim),0 0 50px var(--accent-dim);
+    }
+    .login-eyebrow{font-size:10px;letter-spacing:.18em;color:var(--text-muted);text-transform:uppercase;margin-bottom:.5rem;}
+    .login-title{
+      font-size:1.3rem;font-weight:700;letter-spacing:.04em;color:var(--accent-neon);
+      text-shadow:0 0 8px var(--accent-neon),0 0 22px var(--accent-dim);margin-bottom:.4rem;
+    }
+    .login-sub{font-size:10px;color:var(--accent-cyan);letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.75rem;opacity:.8;}
+    .field{margin-bottom:1rem;}
+    .field label{display:block;font-size:10px;letter-spacing:.14em;color:var(--text-muted);text-transform:uppercase;margin-bottom:.4rem;}
+    .field input{
+      width:100%;background:var(--bg-void);border:1px solid var(--border-base);border-radius:var(--radius);
+      color:var(--text-primary);font-family:var(--font-mono);font-size:13px;padding:.65rem .8rem;
+      outline:none;caret-color:var(--accent-neon);transition:border-color var(--transition),box-shadow var(--transition);
+    }
+    .field input:focus{border-color:var(--accent-neon);box-shadow:0 0 0 1px var(--accent-dim),0 0 14px var(--accent-dim);}
+    .login-error{font-size:10px;color:var(--danger);letter-spacing:.1em;margin:.6rem 0 0;min-height:14px;}
+
+    /* ---------- BUTTONS ---------- */
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:transparent;
+      border:1px solid var(--accent-neon);color:var(--accent-neon);font-family:var(--font-mono);
+      font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:.6rem 1.2rem;
+      border-radius:var(--radius);cursor:pointer;transition:all var(--transition);white-space:nowrap;
+    }
+    .btn:hover{background:var(--accent-neon);color:var(--bg-void);box-shadow:0 0 12px var(--accent-neon);}
+    .btn.full{width:100%;}
+    .btn.ghost{border-color:var(--border-base);color:var(--text-muted);}
+    .btn.ghost:hover{border-color:var(--text-muted);color:var(--text-primary);background:transparent;box-shadow:none;}
+    .btn.danger{border-color:var(--danger);color:var(--danger);}
+    .btn.danger:hover{background:var(--danger);color:var(--bg-void);box-shadow:0 0 12px var(--danger);}
+    .btn.warn{border-color:var(--warn);color:var(--warn);}
+    .btn.warn:hover{background:var(--warn);color:var(--bg-void);box-shadow:0 0 12px var(--warn);}
+    .btn.cyan{border-color:var(--accent-cyan);color:var(--accent-cyan);}
+    .btn.cyan:hover{background:var(--accent-cyan);color:var(--bg-void);box-shadow:0 0 12px var(--accent-cyan);}
+    .btn.sm{font-size:9px;padding:.35rem .7rem;letter-spacing:.12em;}
+
+    /* ---------- SHELL / DASH ---------- */
+    .shell{max-width:1100px;margin:0 auto;padding:1.5rem 1.25rem 5rem;}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;
+      padding:1.5rem 0;border-bottom:1px solid var(--border-base);margin-bottom:1.5rem;
+    }
+    .topbar h1{font-size:1.05rem;color:var(--accent-neon);letter-spacing:.04em;text-shadow:0 0 8px var(--accent-dim);}
+    .topbar .status{display:inline-flex;align-items:center;gap:.5rem;font-size:10px;color:var(--accent-neon);letter-spacing:.14em;text-transform:uppercase;}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-neon);box-shadow:0 0 6px var(--accent-neon);animation:blink 1.4s ease-in-out infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.08;}}
+
+    .tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+    .tab{
+      background:transparent;border:1px solid var(--border-base);color:var(--text-muted);
+      font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+      padding:.5rem .9rem;border-radius:var(--radius);cursor:pointer;transition:all var(--transition);
+    }
+    .tab:hover{color:var(--text-primary);border-color:#252525;}
+    .tab.active{border-color:var(--accent-neon);color:var(--accent-neon);box-shadow:0 0 10px var(--accent-dim);}
+
+    .panel{display:none;animation:fade .3s ease both;}
+    .panel.active{display:block;}
+    @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+    .section-label{font-size:10px;letter-spacing:.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
+    .section-label::before{content:'';width:18px;height:1px;background:var(--accent-neon);opacity:.5;}
+
+    .mock-banner{
+      background:rgba(255,179,0,.06);border:1px dashed var(--warn);color:var(--warn);
+      font-size:10px;letter-spacing:.1em;padding:.6rem .8rem;border-radius:var(--radius);margin-bottom:1rem;
+    }
+
+    .card{background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:.6rem;position:relative;}
+    .card:hover{border-color:#252525;background:var(--bg-hover);}
+    .card .meta{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem;}
+    .anon-id{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--accent-cyan);text-transform:uppercase;}
+    .ts{font-size:10px;color:var(--text-muted);letter-spacing:.08em;}
+    .body{font-size:13px;line-height:1.7;word-break:break-word;}
+    .body.blurred{filter:blur(5px);transition:filter .2s;}
+    .card .actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem;}
+    .pill{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:2px 6px;border-radius:1px;}
+    .pill.reported{background:var(--danger);color:var(--bg-void);}
+    .pill.locked{background:var(--warn);color:var(--bg-void);}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;margin-bottom:1.5rem;}
+    .stat{background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);padding:1rem;}
+    .stat .num{font-size:1.8rem;font-weight:700;color:var(--accent-cyan);text-shadow:0 0 12px var(--accent-cyan-dim);}
+    .stat .lbl{font-size:9px;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-top:.2rem;}
+
+    .bars{display:flex;align-items:flex-end;gap:4px;height:120px;padding:.5rem;background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);}
+    .bar{flex:1;background:linear-gradient(to top,var(--accent-dim),var(--accent-neon));border-radius:1px 1px 0 0;min-height:2px;transition:height .4s ease;}
+
+    .row-inline{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+    .row-inline input{flex:1;min-width:160px;background:var(--bg-void);border:1px solid var(--border-base);border-radius:var(--radius);color:var(--text-primary);font-family:var(--font-mono);font-size:12px;padding:.55rem .7rem;outline:none;caret-color:var(--accent-neon);}
+    .row-inline input:focus{border-color:var(--accent-neon);}
+
+    .list-item{display:flex;justify-content:space-between;align-items:center;gap:.75rem;background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);padding:.6rem .9rem;margin-bottom:.4rem;}
+    .list-item code{color:var(--accent-cyan);font-size:12px;}
+
+    .empty{text-align:center;padding:2.5rem 1rem;color:var(--text-muted);font-size:11px;letter-spacing:.12em;border:1px dashed var(--border-base);border-radius:var(--radius);}
+
+    .kbd-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem;}
+    .kbd{display:flex;justify-content:space-between;gap:.5rem;background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);padding:.5rem .8rem;font-size:11px;}
+    .kbd b{color:var(--accent-neon);background:var(--bg-void);padding:1px 7px;border-radius:2px;border:1px solid var(--border-base);}
+
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg-surface);border:1px solid var(--border-base);border-radius:var(--radius);padding:.8rem 1rem;margin-bottom:.5rem;}
+    .toggle-row .t-label{font-size:12px;}
+    .toggle-row .t-desc{font-size:10px;color:var(--text-muted);margin-top:.2rem;}
+
+    .toast{position:fixed;bottom:2rem;right:1.5rem;background:var(--bg-surface);border:1px solid var(--accent-neon);color:var(--accent-neon);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:.65rem 1.1rem;border-radius:var(--radius);box-shadow:0 0 12px var(--accent-dim);opacity:0;transform:translateY(8px);transition:.25s ease;pointer-events:none;z-index:9999;}
+    .toast.visible{opacity:1;transform:translateY(0);}
+
+    @media(max-width:540px){.topbar .status{display:none;}}
+  </style>
+</head>
+<body>
+
+<!-- ============ LOGIN VIEW ============ -->
+<div id="viewLogin" class="view active">
+  <div class="login-wrap">
+    <form class="login-box" id="loginForm" autocomplete="off">
+      <p class="login-eyebrow">restricted access</p>
+      <h1 class="login-title">// ADMIN_CONSOLE</h1>
+      <p class="login-sub">anchor1sm's gate · moderator auth</p>
+
+      <div class="field">
+        <label for="pw">access key</label>
+        <input type="password" id="pw" placeholder="enter credential" spellcheck="false" autocomplete="off" />
+      </div>
+
+      <p class="login-error" id="loginError"></p>
+      <button class="btn full" type="submit">[ AUTHENTICATE ]</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD VIEW ============ -->
+<div id="viewDash" class="view">
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <h1>// ADMIN_CONSOLE</h1>
+        <span class="status"><span class="dot"></span> SESSION_ACTIVE</span>
+      </div>
+      <button class="btn ghost sm" id="btnLogout">[ LOGOUT ]</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-panel="queue">queue</button>
+      <button class="tab" data-panel="analytics">analytics</button>
+      <button class="tab" data-panel="filters">word filters</button>
+      <button class="tab" data-panel="boards">boards</button>
+      <button class="tab" data-panel="system">system</button>
+      <button class="tab" data-panel="shortcuts">shortcuts</button>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="panel active" id="panel-queue">
+      <p class="section-label">// moderation_queue</p>
+      <div class="row-inline">
+        <button class="btn sm cyan" data-filter="all">all</button>
+        <button class="btn sm danger" data-filter="reported">reported</button>
+        <button class="btn sm ghost" id="btnRefresh">↻ refresh</button>
+      </div>
+      <div id="queueList"><div class="empty">&gt; loading transmissions…</div></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="panel" id="panel-analytics">
+      <p class="section-label">// privacy_first_analytics</p>
+      <div class="grid" id="statGrid"></div>
+      <p class="section-label">// activity_volume (last 12 buckets)</p>
+      <div class="bars" id="barChart"></div>
+      <br>
+      <p class="section-label">// flagging_trends_by_board</p>
+      <div id="flagTrends"></div>
+    </div>
+
+    <!-- WORD FILTERS -->
+    <div class="panel" id="panel-filters">
+      <p class="section-label">// word_filters &amp; regex_matchers</p>
+      <div class="row-inline">
+        <input type="text" id="filterInput" placeholder="banned word or /regex/ pattern" spellcheck="false" />
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:10px;color:var(--text-muted);">
+          <input type="checkbox" id="filterRegex" /> REGEX
+        </label>
+        <button class="btn sm" id="btnAddFilter">[ ADD ]</button>
+      </div>
+      <div id="filterList"></div>
+    </div>
+
+    <!-- BOARDS -->
+    <div class="panel" id="panel-boards">
+      <p class="section-label">// board_&amp;_tag_management</p>
+      <div class="row-inline">
+        <input type="text" id="boardTitle" placeholder="new board title" spellcheck="false" />
+        <input type="text" id="boardDesc" placeholder="description" spellcheck="false" />
+        <button class="btn sm" id="btnAddBoard">[ CREATE ]</button>
+      </div>
+      <div id="boardList"></div>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="panel" id="panel-system">
+      <p class="section-label">// system_&amp;_configuration</p>
+      <div class="mock-banner">⚠ The toggles below are UI-only. Real rate-limiting, IP blocking, shadow-banning and maintenance mode require a server (Supabase Edge Functions + service_role key). They cannot be enforced from the browser.</div>
+      <div class="toggle-row"><div><div class="t-label">Rate Limiting</div><div class="t-desc">Limit posts per IP / window</div></div><button class="btn sm ghost mocktoggle">OFF</button></div>
+      <div class="toggle-row"><div><div class="t-label">Maintenance Mode</div><div class="t-desc">Read-only during updates</div></div><button class="btn sm ghost mocktoggle">OFF</button></div>
+      <div class="toggle-row"><div><div class="t-label">Auto Shadow-Ban</div><div class="t-desc">Silently restrict abusive users</div></div><button class="btn sm ghost mocktoggle">OFF</button></div>
+
+      <p class="section-label" style="margin-top:1.5rem;">// ip_subnet_blocking</p>
+      <div class="row-inline">
+        <input type="text" id="ipInput" placeholder="e.g. 203.0.113.0/24" spellcheck="false" />
+        <button class="btn sm warn" id="btnBlockIp">[ BLOCK ]</button>
+      </div>
+      <div id="ipList"></div>
+
+      <p class="section-label" style="margin-top:1.5rem;">// admin_audit_log (this session)</p>
+      <div id="auditLog"></div>
+    </div>
+
+    <!-- SHORTCUTS -->
+    <div class="panel" id="panel-shortcuts">
+      <p class="section-label">// keyboard_shortcut_legend</p>
+      <div class="kbd-legend">
+        <div class="kbd"><span>Approve focused post</span><b>A</b></div>
+        <div class="kbd"><span>Delete focused post</span><b>D</b></div>
+        <div class="kbd"><span>Lock thread</span><b>L</b></div>
+        <div class="kbd"><span>Blur (NSFW)</span><b>B</b></div>
+        <div class="kbd"><span>Refresh queue</span><b>R</b></div>
+        <div class="kbd"><span>Next / prev post</span><b>J / K</b></div>
+        <div class="kbd"><span>Switch tabs</span><b>1 – 6</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ============ CONFIG ============ */
+const SUPABASE_URL = "[jpvudzpmwjjtcbndolxy.supabase.co](https://jpvudzpmwjjtcbndolxy.supabase.co)"; // corrected from supabase.co
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwdnVkenBtd2pqdGNibmRvbHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDM0NDAsImV4cCI6MjA5NzI3OTQ0MH0.FZ7u4XHw2RnGNvKI2sS8f-1KUccpr1yuasTFnQuq8l4";
+
+// NOTE: client-side password. NOT secure — see explanation. Anyone can read this in DevTools.
+const ADMIN_KEY = "rudra01anchor1sm";
+const SESSION_FLAG = "anchor1sm_admin_session";
+
+const hdr = {
+  "apikey": SUPABASE_ANON_KEY,
+  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+  "Content-Type": "application/json"
+};
+
+/* ============ HELPERS ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const toastEl = $('#toast');
+let toastTimer;
+function toast(msg){ clearTimeout(toastTimer); toastEl.textContent = msg; toastEl.classList.add('visible'); toastTimer = setTimeout(()=>toastEl.classList.remove('visible'),2500); }
+
+function relTime(iso){
+  const s = Math.floor((Date.now() - new Date(iso).getTime())/1000);
+  if(s<60) return s+'s ago';
+  const m=Math.floor(s/60); if(m<60) return m+'m ago';
+  const h=Math.floor(m/60); if(h<24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+const auditEntries = [];
+function audit(action){
+  auditEntries.unshift(`[${new Date().toLocaleTimeString()}] ${action}`);
+  renderAudit();
+}
+function renderAudit(){
+  const el = $('#auditLog');
+  if(!el) return;
+  el.innerHTML = auditEntries.length
+    ? auditEntries.map(e=>`<div class="list-item"><code>${escapeHtml(e)}</code></div>`).join('')
+    : '<div class="empty">&gt; no actions logged this session.</div>';
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str == null ? '' : str; return d.innerHTML;
+}
+
+/* ============ SUPABASE CALLS ============ */
+async function sbGet(path){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: hdr });
+  if(!r.ok) throw new Error(`GET ${path} → ${r.status}`);
+  return r.json();
+}
+async function sbPatch(path, body){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method:"PATCH", headers:{...hdr,"Prefer":"return=minimal"}, body:JSON.stringify(body) });
+  if(!r.ok) throw new Error(`PATCH ${path} → ${r.status}`);
+}
+async function sbPost(path, body){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method:"POST", headers:{...hdr,"Prefer":"return=minimal"}, body:JSON.stringify(body) });
+  if(!r.ok) throw new Error(`POST ${path} → ${r.status}`);
+}
+async function sbDelete(path){
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method:"DELETE", headers:hdr });
+  if(!r.ok) throw new Error(`DELETE ${path} → ${r.status}`);
+}
+
+/* ============ AUTH ============ */
+function showDash(){
+  $('#viewLogin').classList.remove('active');
+  $('#viewDash').classList.add('active');
+  loadQueue(); loadAnalytics(); loadFilters(); loadBoards();
+}
+$('#loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const val = $('#pw').value;
+  if(val === ADMIN_KEY){
+    sessionStorage.setItem(SESSION_FLAG, "1");
+    $('#loginError').textContent = "";
+    audit("ADMIN authenticated");
+    showDash();
+    toast("✓ ACCESS_GRANTED");
+  } else {
+    $('#loginError').textContent = "⚠ ACCESS_DENIED — invalid credential.";
+    $('#pw').value = "";
+  }
+});
+$('#btnLogout').addEventListener('click', ()=>{
+  sessionStorage.removeItem(SESSION_FLAG);
+  location.reload();
+});
+// Resume session if already authed this tab
+if(sessionStorage.getItem(SESSION_FLAG) === "1") showDash();
+
+/* ============ TABS ============ */
+$$('.tab').forEach(t=>t.addEventListener('click',()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  $$('.panel').forEach(p=>p.classList.remove('active'));
+  t.classList.add('active');
+  $('#panel-'+t.dataset.panel).classList.add('active');
+}));
+
+/* ============ QUEUE / MODERATION ============ */
+let currentFilter = 'all';
+let queueCache = [];
+
+async function loadQueue(){
+  const list = $('#queueList');
+  list.innerHTML = '<div class="empty">&gt; loading transmissions…</div>';
+  try {
+    queueCache = await sbGet('forum_posts?order=created_at.desc&limit=200');
+    renderQueue();
+  } catch(err){
+    list.innerHTML = `<div class="empty">⚠ failed to load — ${escapeHtml(err.message)}<br>check your table has the moderation columns (see SQL).</div>`;
+  }
+}
+
+function renderQueue(){
+  const list = $('#queueList');
+  let posts = queueCache.filter(p => p.status !== 'deleted');
+  if(currentFilter === 'reported') posts = posts.filter(p => p.status === 'reported');
+
+  if(!posts.length){ list.innerHTML = '<div class="empty">&gt; queue clear. no signals to review.</div>'; return; }
+
+  list.innerHTML = posts.map(p => {
+    const pills = [];
+    if(p.status === 'reported') pills.push('<span class="pill reported">reported</span>');
+    if(p.locked) pills.push('<span class="pill locked">locked</span>');
+    return `
+    <div class="card" data-id="${p.id}" tabindex="0">
+      <div class="meta">
+        <span class="anon-id">[${escapeHtml(p.username||'Anonimo')}] ${pills.join(' ')}</span>
+        <span class="ts">${p.created_at ? relTime(p.created_at) : ''}</span>
+      </div>
+      <p class="body ${p.blurred?'blurred':''}">${escapeHtml(p.messaggio)}</p>
+      <div class="actions">
+        <button class="btn sm cyan"  data-act="approve" data-id="${p.id}">approve</button>
+        <button class="btn sm warn"  data-act="lock"    data-id="${p.id}">${p.locked?'unlock':'lock'}</button>
+        <button class="btn sm ghost" data-act="blur"    data-id="${p.id}">${p.blurred?'unblur':'blur'}</button>
+        <button class="btn sm danger" data-act="delete"  data-id="${p.id}">delete</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  $$('#queueList [data-act]').forEach(b => b.addEventListener('click', onModAction));
+}
+
+async function onModAction(e){
+  const id = e.currentTarget.dataset.id;
+  const act = e.currentTarget.dataset.act;
+  const post = queueCache.find(p => String(p.id) === String(id));
+  if(!post) return;
+  try {
+    if(act === 'approve'){ await sbPatch(`forum_posts?id=eq.${id}`, {status:'approved'}); post.status='approved'; toast('✓ approved'); audit(`Approved post #${id}`); }
+    if(act === 'lock'){ const v=!post.locked; await sbPatch(`forum_posts?id=eq.${id}`, {locked:v}); post.locked=v; toast(v?'✓ locked':'✓ unlocked'); audit(`${v?'Locked':'Unlocked'} post #${id}`); }
+    if(act === 'blur'){ const v=!post.blurred; await sbPatch(`forum_posts?id=eq.${id}`, {blurred:v}); post.blurred=v; toast(v?'✓ blurred':'✓ unblurred'); audit(`${v?'Blurred':'Unblurred'} post #${id}`); }
+    if(act === 'delete'){
+      if(!confirm('Delete this post permanently?')) return;
+      await sbDelete(`forum_posts?id=eq.${id}`);
+      queueCache = queueCache.filter(p => String(p.id)!==String(id));
+      toast('✓ deleted'); audit(`Deleted post #${id}`);
+    }
+    renderQueue();
+  } catch(err){ toast('⚠ '+err.message); }
+}
+
+$$('[data-filter]').forEach(b=>b.addEventListener('click',()=>{ currentFilter=b.dataset.filter; renderQueue(); }));
+$('#btnRefresh').addEventListener('click', loadQueue);
+
+/* ============ ANALYTICS ============ */
+async function loadAnalytics(){
+  let posts = [];
+  try { posts = await sbGet('forum_posts?order=created_at.desc&limit=500'); } catch(e){ posts=queueCache; }
+
+  const total = posts.length;
+  const reported = posts.filter(p=>p.status==='reported').length;
+  const last24 = posts.filter(p=> p.created_at && (Date.now()-new Date(p.created_at).getTime()) < 864e5).length;
+  const violationRatio = reported ? Math.round((reported/total)*100) : 0;
+
+  $('#statGrid').innerHTML = [
+    ['posts (total)', total],
+    ['posts (24h)', last24],
+    ['reported', reported],
+    ['report ratio', violationRatio+'%']
+  ].map(([l,n])=>`<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('');
+
+  // Activity buckets — last 12 two-hour windows
+  const now = Date.now(), buckets = new Array(12).fill(0);
+  posts.forEach(p=>{
+    if(!p.created_at) return;
+    const hoursAgo = (now - new Date(p.created_at).getTime())/36e5;
+    const idx = 11 - Math.floor(hoursAgo/2);
+    if(idx>=0 && idx<12) buckets[idx]++;
+  });
+  const max = Math.max(1, ...buckets);
+  $('#barChart').innerHTML = buckets.map(b=>`<div class="bar" style="height:${(b/max)*100}%" title="${b} posts"></div>`).join('');
+
+  // Flagging trends grouped by username (proxy for board, since posts table has no board ref)
+  const byUser = {};
+  posts.filter(p=>p.status==='reported').forEach(p=>{ const k=p.username||'Anonimo'; byUser[k]=(byUser[k]||0)+1; });
+  const entries = Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $('#flagTrends').innerHTML = entries.length
+    ? entries.map(([k,v])=>`<div class="list-item"><span>${escapeHtml(k)}</span><code>${v} flags</code></div>`).join('')
+    : '<div class="empty">&gt; no flagged content. clean channels.</div>';
+}
+
+/* ============ WORD FILTERS ============ */
+async function loadFilters(){
+  const el = $('#filterList');
+  try {
+    const rows = await sbGet('word_filters?order=created_at.desc');
+    el.innerHTML = rows.length
+      ? rows.map(f=>`<div class="list-item"><span><code>${escapeHtml(f.pattern)}</code> ${f.is_regex?'<span class="pill locked">regex</span>':''}</span><button class="btn sm danger" data-fid="${f.id}">remove</button></div>`).join('')
+      : '<div class="empty">&gt; no filters configured.</div>';
+    $$('#filterList [data-fid]').forEach(b=>b.addEventListener('click', async()=>{
+      try{ await sbDelete(`word_filters?id=eq.${b.dataset.fid}`); audit(`Removed filter #${b.dataset.fid}`); loadFilters(); toast('✓ removed'); }catch(e){ toast('⚠ '+e.message); }
+    }));
+  } catch(err){
+    el.innerHTML = `<div class="empty">⚠ ${escapeHtml(err.message)}<br>create the word_filters table (see SQL).</div>`;
+  }
+}
+$('#btnAddFilter').addEventListener('click', async()=>{
+  const pattern = $('#filterInput').value.trim();
+  if(!pattern){ toast('⚠ pattern empty'); return; }
+  try{
+    await sbPost('word_filters', { pattern, is_regex: $('#filterRegex').checked });
+    $('#filterInput').value=''; $('#filterRegex').checked=false;
+    audit(`Added filter "${pattern}"`); loadFilters(); toast('✓ filter added');
+  }catch(e){ toast('⚠ '+e.message); }
+});
+
+/* ============ BOARDS ============ */
+async function loadBoards(){
+  const el = $('#boardList');
+  try {
+    const rows = await sbGet('forum_boards?order=created_at.desc');
+    el.innerHTML = rows.length
+      ? rows.map(b=>`<div class="list-item">
+          <span><b style="color:var(--accent-neon)">${escapeHtml(b.title)}</b> — <span style="color:var(--text-muted)">${escapeHtml(b.description||'')}</span> ${b.archived?'<span class="pill locked">archived</span>':''}</span>
+          <span style="display:flex;gap:.4rem;">
+            <button class="btn sm warn" data-arch="${b.id}">${b.archived?'restore':'archive'}</button>
+            <button class="btn sm danger" data-del="${b.id}">delete</button>
+          </span></div>`).join('')
+      : '<div class="empty">&gt; no boards yet.</div>';
+    $$('#boardList [data-arch]').forEach(btn=>btn.addEventListener('click', async()=>{
+      const id=btn.dataset.arch; const cur=btn.textContent.trim()==='archive';
+      try{ await sbPatch(`forum_boards?id=eq.${id}`,{archived:cur}); audit(`${cur?'Archived':'Restored'} board ${id}`); loadBoards(); }catch(e){ toast('⚠ '+e.message); }
+    }));
+    $$('#boardList [data-del]').forEach(btn=>btn.addEventListener('click', async()=>{
+      if(!confirm('Delete this board?')) return;
+      try{ await sbDelete(`forum_boards?id=eq.${btn.dataset.del}`); audit(`Deleted board ${btn.dataset.del}`); loadBoards(); toast('✓ deleted'); }catch(e){ toast('⚠ '+e.message); }
+    }));
+  } catch(err){
+    el.innerHTML = `<div class="empty">⚠ ${escapeHtml(err.message)}<br>create the forum_boards table (see SQL).</div>`;
+  }
+}
+$('#btnAddBoard').addEventListener('click', async()=>{
+  const title=$('#boardTitle').value.trim(), description=$('#boardDesc').value.trim();
+  if(!title){ toast('⚠ title empty'); return; }
+  try{
+    await sbPost('forum_boards', { id:`board_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, title, description });
+    $('#boardTitle').value=''; $('#boardDesc').value='';
+    audit(`Created board "${title}"`); loadBoards(); toast('✓ board created');
+  }catch(e){ toast('⚠ '+e.message); }
+});
+
+/* ============ SYSTEM (mock toggles + local IP list) ============ */
+$$('.mocktoggle').forEach(b=>b.addEventListener('click',()=>{
+  const on = b.textContent.trim()==='OFF';
+  b.textContent = on?'ON':'OFF';
+  b.classList.toggle('cyan', on); b.classList.toggle('ghost', !on);
+  audit(`Toggled "${b.closest('.toggle-row').querySelector('.t-label').textContent}" → ${on?'ON':'OFF'} (mock)`);
+}));
+const blockedIps = [];
+$('#btnBlockIp').addEventListener('click',()=>{
+  const ip=$('#ipInput').value.trim();
+  if(!ip){ toast('⚠ enter an IP/subnet'); return; }
+  blockedIps.unshift(ip); $('#ipInput').value='';
+  audit(`Blocked ${ip} (mock — not enforced)`);
+  $('#ipList').innerHTML = blockedIps.map(i=>`<div class="list-item"><code>${escapeHtml(i)}</code><span class="pill locked">mock</span></div>`).join('');
+  toast('✓ added to local blocklist (UI only)');
+});
+
+/* ============ KEYBOARD SHORTCUTS ============ */
+let focusIdx = -1;
+document.addEventListener('keydown', e=>{
+  if($('#viewDash').classList.contains('active')===false) return;
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+  // tab switching 1-6
+  if(['1','2','3','4','5','6'].includes(e.key)){
+    const tabs=$$('.tab'); const i=+e.key-1; if(tabs[i]) tabs[i].click(); return;
+  }
+  if(!$('#panel-queue').classList.contains('active')) return;
+  const cards = $$('#queueList .card');
+  if(!cards.length) return;
+
+  if(e.key==='j'||e.key==='J'){ focusIdx=Math.min(cards.length-1,focusIdx+1); cards[focusIdx].focus(); }
+  if(e.key==='k'||e.key==='K'){ focusIdx=Math.max(0,focusIdx-1); cards[focusIdx].focus(); }
+  if(e.key==='r'||e.key==='R'){ loadQueue(); }
+
+  const active = document.activeElement.closest?.('.card');
+  if(!active) return;
+  const id = active.dataset.id;
+  const map={a:'approve',d:'delete',l:'lock',b:'blur'};
+  if(map[e.key?.toLowerCase()]){
+    const btn = active.querySelector(`[data-act="${map[e.key.toLowerCase()]}"]`);
+    if(btn) btn.click();
+  }
+});
+
+renderAudit();
+</script>
+</body>
+</html>
