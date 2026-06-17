@@ -1,6 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // Configurazione del tuo database Supabase (Dati già inseriti)
+    const SUPABASE_URL = "https://supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwdnVkenBtd2pqdGNibmRvbHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDM0NDAsImV4cCI6MjA5NzI3OTQ0MH0.FZ7u4XHw2RnGNvKI2sS8f-1KUccpr1yuasTFnQuq8l4";
+
+    // 1. FUNZIONE PER INVIARE UN MESSAGGIO ANONIMO
+    async function inviaPost() {
+        // Piglia il testo dai tuoi elementi di input HTML (Verifica che i loro ID siano questi)
+        const usernameInput = document.getElementById('username').value.trim();
+        const messaggioInput = document.getElementById('messaggio').value.trim();
+
+        // Controllo di sicurezza: impedisce l'invio di messaggi vuoti
+        if (!messaggioInput) {
+            alert("Errore: Il messaggio non può essere vuoto.");
+            return;
+        }
+
+        // Se l'utente non sceglie un alias, imposta "Anonimo" di default
+        const username = usernameInput || "Anonimo";
+
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/forum_posts`, {
+                method: "POST",
+                headers: {
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                },
+                body: JSON.stringify({ 
+                    username: username, 
+                    messaggio: messaggioInput 
+                })
+            });
+
+            if (response.ok) {
+                // Svuota solo il box del messaggio, mantiene l'username scelto
+                document.getElementById('messaggio').value = ''; 
+                // Ricarica subito la bacheca per mostrare il nuovo post
+                caricaPost(); 
+            } else {
+                console.error("Errore di risposta dal database.");
+            }
+        } catch (error) {
+            console.error("Errore di rete durante l'invio:", error);
+        }
+    }
+
+    // 2. FUNZIONE PER LEGGERE TUTTI I MESSAGGI E INSERIRLI NELLA GRAFICA
+    async function caricaPost() {
+        try {
+            // Chiede a Supabase i post ordinati dal più recente (created_at desc)
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/forum_posts?order=created_at.desc`, {
+                headers: {
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            });
+            const posts = await response.json();
+            
+            // Piglia il contenitore HTML dove mostrare i messaggi (Verifica che l'ID sia questo)
+            const areaDellaBoard = document.getElementById('board-posts');
+            areaDellaBoard.innerHTML = '';
+
+            if (posts.length === 0) {
+                areaDellaBoard.innerHTML = '<div class="no-posts">> La board è vuota. Lascia un messaggio anonimo.</div>';
+                return;
+            }
+
+            // Cicla tutti i messaggi ricevuti e li stampa dentro la tua bacheca
+            posts.forEach(post => {
+                const dataLocale = new Date(post.created_at).toLocaleString('it-IT');
+                
+                // Modifica questa struttura HTML interna per farla combaciare con la tua grafica CSS
+                areaDellaBoard.innerHTML += `
+                    <div class="post">
+                        <div class="post-header">
+                            #ID: ${post.id} | User: <span class="username-style">${escapeHTML(post.username)}</span> | Data: ${dataLocale}
+                        </div>
+                        <div class="post-body">> ${escapeHTML(post.messaggio)}</div>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error("Errore nel caricamento dei post:", error);
+        }
+    }
+
+    // 3. PROTEZIONE DI SICUREZZA (Anti-XSS)
+    // Impedisce alle persone malintenzionate di iniettare codice JavaScript nocivo scrivendolo nei messaggi
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // Avvia la lettura dei messaggi appena la pagina si apre nel browser
+    caricaPost();
+
+    // Aggiorna la lista dei post in automatico ogni 5 secondi (5000 millisecondi)
+    setInterval(caricaPost, 5000);
+</script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ANCHOR1SM'S GATE // v1.0</title>
