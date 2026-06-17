@@ -269,123 +269,18 @@
 'use strict';
 
 /* ============ CONFIG ============ */
-/* ============ CONFIG & INIZIALIZZAZIONE ============ */
-// Nota: Rimosso il markdown dall'URL e sostituito con la stringa pulita
-const SUPABASE_URL = "https://jpvudzpmwjjtcbndolxy.supabase.co"; 
+const SUPABASE_URL = "[jpvudzpmwjjtcbndolxy.supabase.co](https://jpvudzpmwjjtcbndolxy.supabase.co)"; // corrected from supabase.co
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwdnVkenBtd2pqdGNibmRvbHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDM0NDAsImV4cCI6MjA5NzI3OTQ0MH0.FZ7u4XHw2RnGNvKI2sS8f-1KUccpr1yuasTFnQuq8l4";
 
-// Inizializza il client ufficiale di Supabase (Assicurati di aver incluso lo script di Supabase nel tuo HTML)
-// Esempio HTML: <script src="https://jsdelivr.net"></script>
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// NOTE: client-side password. NOT secure — see explanation. Anyone can read this in DevTools.
+const ADMIN_KEY = "rudra01anchor1sm";
+const SESSION_FLAG = "anchor1sm_admin_session";
 
-/* ============ HELPERS ============ */
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const toastEl = $('#toast');
-let toastTimer;
-function toast(msg){ clearTimeout(toastTimer); toastEl.textContent = msg; toastEl.classList.add('visible'); toastTimer = setTimeout(()=>toastEl.classList.remove('visible'),2500); }
-
-function relTime(iso){
-  const s = Math.floor((Date.now() - new Date(iso).getTime())/1000);
-  if(s<60) return s+'s ago';
-  const m=Math.floor(s/60); if(m<60) return m+'m ago';
-  const h=Math.floor(m/60); if(h<24) return h+'h ago';
-  return Math.floor(h/24)+'d ago';
-}
-
-const auditEntries = [];
-function audit(action){
-  auditEntries.unshift(`[${new Date().toLocaleTimeString()}] ${action}`);
-  renderAudit();
-}
-function renderAudit(){
-  const el = $('#auditLog');
-  if(!el) return;
-  el.innerHTML = auditEntries.length
-    ? auditEntries.map(e=>`<div class="list-item"><code>${escapeHtml(e)}</code></div>`).join('')
-    : '<div class="empty">&gt; no actions logged this session.</div>';
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div'); d.textContent = str == null ? '' : str; return d.innerHTML;
-}
-
-/* ============ NUOVE FUNZIONI SUPABASE (SICURE E PROTETTE) ============ */
-
-// 1. FUNZIONE LOGIN ADMIN (Usa l'utente reale creato sulla Dashboard)
-async function loginAdmin(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (error) {
-    toast(`Errore di login: ${error.message}`);
-    throw error;
-  }
-  
-  toast("Accesso Admin eseguito!");
-  audit("Admin eseguito l'accesso con successo");
-  return data;
-}
-
-// 2. FUNZIONE LOGOUT ADMIN
-async function logoutAdmin() {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    toast(`Errore durante il logout: ${error.message}`);
-  } else {
-    toast("Logout Admin effettuato.");
-    audit("Admin disconnesso");
-  }
-}
-
-// 3. RECUPERARE I POST (Visibile a chiunque)
-async function getPosts() {
-  const { data, error } = await supabase
-    .from('forum_posts')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    toast(`Errore caricamento post: ${error.message}`);
-    throw error;
-  }
-  return data;
-}
-
-// 4. CREARE UN POST (Anonimo - Chiunque può usarlo)
-async function createPost(forumId, title, content, authorName = "Anonimo") {
-  const { data, error } = await supabase
-    .from('forum_posts')
-    .insert([
-      { forum_id: forumId, title: title, content: content, author_name: authorName }
-    ]);
-
-  if (error) {
-    toast(`Errore creazione post: ${error.message}`);
-    throw error;
-  }
-  toast("Post inviato correttamente!");
-  audit(`Creato nuovo post anonimo: "${title}"`);
-  return data;
-}
-
-// 5. CANCELLARE UN POST (Funzionerà SOLO se l'admin ha fatto il login grazie all'RLS)
-async function deletePost(postId) {
-  const { data, error } = await supabase
-    .from('forum_posts')
-    .delete()
-    .eq('id', postId);
-
-  if (error) {
-    toast(`Errore eliminazione: ${error.message}`);
-    throw error;
-  }
-  toast("Post eliminato dall'Admin.");
-  audit(`Eliminato post ID: ${postId}`);
-  return data;
-}
+const hdr = {
+  "apikey": SUPABASE_ANON_KEY,
+  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+  "Content-Type": "application/json"
+};
 
 /* ============ HELPERS ============ */
 const $ = s => document.querySelector(s);
