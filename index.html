@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANCHOR1SM'S GATE // v1.0</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+       ============================================================ */
+    :root {
+      --bg-void:         #000000;
+      --bg-surface:      #080808;
+      --bg-hover:        #0d0d0d;
+      --bg-overlay:      #050505;
+      --accent-neon:     #00ff66;
+      --accent-cyan:     #00f0ff;
+      --accent-dim:      #00ff6633;
+      --accent-cyan-dim: #00f0ff22;
+      --text-primary:    #e8e8e8;
+      --text-muted:      #4a4a4a;
+      --text-ghost:      #222222;
+      --border-base:     #1a1a1a;
+      --font-mono:       'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      --radius:          2px;
+      --transition:      0.18s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      min-height: 100vh;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 2px,
+        rgba(0, 255, 102, 0.012) 2px,
+        rgba(0, 255, 102, 0.012) 4px
+      );
+    }
+
+    /* ============================================================
+       VIEWS — only one visible at a time
+       ============================================================ */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ============================================================
+       SHELL
+       ============================================================ */
+    .shell {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 6rem;
+    }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    .header {
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--border-base);
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    .header__eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .header__title {
+      font-size: clamp(1.1rem, 4vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent-neon);
+      text-shadow:
+        0 0 8px  var(--accent-neon),
+        0 0 22px var(--accent-dim),
+        0 0 55px var(--accent-dim);
+      line-height: 1.2;
+    }
+
+    .header__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--accent-neon);
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent-neon);
+      box-shadow: 0 0 6px var(--accent-neon), 0 0 14px var(--accent-dim);
+      animation: blink 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.08; }
+    }
+
+    .header__meta {
+      position: absolute;
+      top: 2.5rem; right: 0;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-align: right;
+    }
+
+    .header__meta span { color: var(--accent-cyan); }
+
+    /* ============================================================
+       SECTION LABEL
+       ============================================================ */
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 18px; height: 1px;
+      background: var(--accent-neon);
+      opacity: 0.5;
+    }
+
+    /* ============================================================
+       FORUM LIST — HOME VIEW
+       ============================================================ */
+    .forum-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .forum-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Each forum row */
+    .forum-row {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 0.3rem 1.5rem;
+      position: relative;
+      transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+      animation: fadeSlideIn 0.3s ease both;
+    }
+
+    .forum-row::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 2px;
+      background: var(--border-base);
+      border-radius: 1px;
+      transition: background var(--transition);
+    }
+
+    .forum-row:hover {
+      border-color: #252525;
+      background: var(--bg-hover);
+      box-shadow:
+        0 0 0 1px var(--accent-dim),
+        0 0 18px var(--accent-dim);
+    }
+
+    .forum-row:hover::before {
+      background: var(--accent-neon);
+      box-shadow: 0 0 8px var(--accent-neon);
+    }
+
+    .forum-row__title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-neon);
+      letter-spacing: 0.06em;
+      grid-column: 1;
+      grid-row: 1;
+      transition: text-shadow var(--transition);
+    }
+
+    .forum-row:hover .forum-row__title {
+      text-shadow: 0 0 10px var(--accent-neon);
+    }
+
+    .forum-row__desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      grid-column: 1;
+      grid-row: 2;
+      line-height: 1.5;
+    }
+
+    .forum-row__stats {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      grid-column: 2;
+      grid-row: 1 / 3;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.2rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .forum-row__stats .count {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .forum-row__arrow {
+      position: absolute;
+      right: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-ghost);
+      font-size: 14px;
+      transition: color var(--transition), transform var(--transition);
+      pointer-events: none;
+    }
+
+    /* Push stats left when arrow is present */
+    .forum-row { padding-right: 2.5rem; }
+
+    .forum-row:hover .forum-row__arrow {
+      color: var(--accent-neon);
+      transform: translateY(-50%) translateX(3px);
+    }
+
+    /* ============================================================
+       CREATE FORUM MODAL
+       ============================================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 500px;
+      transform: translateY(12px);
+      transition: transform 0.22s ease;
+      box-shadow:
+        0 0 0 1px var(--accent-dim),
+        0 0 40px var(--accent-dim);
+    }
+
+    .modal-backdrop.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal__title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--accent-neon);
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      text-shadow: 0 0 8px var(--accent-dim);
+    }
+
+    .modal__field {
+      margin-bottom: 1rem;
+    }
+
+    .modal__label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal__input,
+    .modal__textarea {
+      width: 100%;
+      background: var(--bg-void);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 0.6rem 0.8rem;
+      outline: none;
+      caret-color: var(--accent-neon);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .modal__textarea {
+      min-height: 80px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .modal__input:focus,
+    .modal__textarea:focus {
+      border-color: var(--accent-neon);
+      box-shadow: 0 0 0 1px var(--accent-dim), 0 0 14px var(--accent-dim);
+    }
+
+    .modal__input::placeholder,
+    .modal__textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+    .modal__error {
+      font-size: 10px;
+      color: #ff3b3b;
+      letter-spacing: 0.1em;
+      margin-top: 0.4rem;
+      display: none;
+    }
+
+    .modal__error.visible { display: block; }
+
+    .modal__footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    /* ============================================================
+       THREAD VIEW
+       ============================================================ */
+    .thread-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border-base);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition);
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent-neon);
+      color: var(--accent-neon);
+    }
+
+    .breadcrumb {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+
+    .breadcrumb span { color: var(--accent-cyan); }
+
+    .thread-header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .thread-header::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 10px; bottom: 10px;
+      width: 2px;
+      background: var(--accent-neon);
+      box-shadow: 0 0 8px var(--accent-neon);
+    }
+
+    .thread-title {
+      font-size: clamp(0.95rem, 3vw, 1.15rem);
+      font-weight: 700;
+      color: var(--accent-neon);
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 10px var(--accent-dim);
+      margin-bottom: 0.4rem;
+    }
+
+    .thread-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       INPUT SECTION (thread view)
+       ============================================================ */
+    .input-section { margin-bottom: 2.5rem; }
+
+    .input-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .input-box:hover,
+    .input-box:focus-within {
+      border-color: var(--accent-neon);
+      box-shadow:
+        0 0 0 1px var(--accent-dim),
+        0 0 18px var(--accent-dim),
+        inset 0 0 24px rgba(0, 255, 102, 0.03);
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      caret-color: var(--accent-neon);
+    }
+
+    .textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+    .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.85rem;
+      gap: 1rem;
+    }
+
+    .char-counter {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      transition: color var(--transition);
+      white-space: nowrap;
+    }
+
+    .char-counter.warning { color: #ffb300; }
+    .char-counter.danger  { color: #ff3b3b; }
+
+    .anon-badge {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .anon-badge::before { content: '//'; color: var(--accent-cyan); opacity: 0.7; }
+
+    .input-error {
+      font-size: 10px;
+      color: #ff3b3b;
+      letter-spacing: 0.1em;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .input-error.visible { display: block; }
+
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      border: 1px solid var(--accent-neon);
+      color: var(--accent-neon);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.4rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition:
+        background var(--transition),
+        box-shadow var(--transition),
+        transform var(--transition),
+        color var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-neon);
+      color: var(--bg-void);
+      box-shadow: 0 0 12px var(--accent-neon), 0 0 30px var(--accent-dim);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+
+    .btn-primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: var(--text-muted);
+      color: var(--text-muted);
+    }
+
+    .btn-primary .spinner {
+      display: none;
+      width: 10px; height: 10px;
+      border: 1.5px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .btn-primary.loading .spinner { display: inline-block; }
+    .btn-primary.loading .btn-label { opacity: 0.5; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Ghost / secondary button */
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      border: 1px solid var(--border-base);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+
+    /* ============================================================
+       FEED
+       ============================================================ */
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.25rem;
+    }
+
+    .feed-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+
+    .feed-count span { color: var(--accent-cyan); }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .message-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+      position: relative;
+      animation: fadeSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-card:hover {
+      border-color: #252525;
+      background: var(--bg-hover);
+      box-shadow:
+        0 0 0 1px var(--accent-cyan-dim),
+        0 0 14px var(--accent-cyan-dim);
+    }
+
+    .message-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 2px;
+      background: var(--border-base);
+      border-radius: 1px;
+      transition: background var(--transition);
+    }
+
+    .message-card:hover::before {
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .message-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .anon-id {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+    }
+
+    .message-timestamp {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      flex-shrink: 0;
+    }
+
+    .message-body {
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.75;
+      word-break: break-word;
+    }
+
+    .badge-new {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--bg-void);
+      background: var(--accent-neon);
+      padding: 1px 5px;
+      border-radius: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 0 8px var(--accent-neon);
+      animation: badgePulse 2.5s ease forwards;
+    }
+
+    @keyframes badgePulse {
+      0%, 70% { opacity: 1; }
+      100%     { opacity: 0; width: 0; padding: 0; overflow: hidden; }
+    }
+
+    .feed-empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      border: 1px dashed var(--border-base);
+      border-radius: var(--radius);
+      display: none;
+    }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-base);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .footer__credit {
+      color: var(--accent-cyan);
+      opacity: 0.7;
+    }
+
+    .footer__right {
+      color: var(--text-ghost);
+    }
+
+    /* ============================================================
+       TOAST
+       ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 1.5rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--accent-neon);
+      color: var(--accent-neon);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.1rem;
+      border-radius: var(--radius);
+      box-shadow: 0 0 12px var(--accent-dim), 0 0 28px var(--accent-dim);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .toast.visible { opacity: 1; transform: translateY(0); }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 540px) {
+      .header__meta       { display: none; }
+      .input-footer       { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+      .btn-primary        { width: 100%; justify-content: center; }
+      .message-meta       { flex-direction: column; align-items: flex-start; }
+      .forum-row__stats   { display: none; }
+      .modal__footer      { flex-direction: column; }
+      .modal__footer .btn-primary,
+      .modal__footer .btn-ghost { width: 100%; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       VIEW: HOME — Forum listing
+       ============================================================ -->
+  <div id="viewHome" class="view active">
+    <main class="shell" role="main">
+
+      <header class="header" role="banner">
+        <p class="header__eyebrow">anonymous feedback interface</p>
+        <h1 class="header__title">ANCHOR1SM'S GATE // v1.0</h1>
+        <div class="header__status" aria-label="System status: online">
+          <span class="status-dot" aria-hidden="true"></span>
+          SYSTEM_ONLINE
+        </div>
+        <div class="header__meta" aria-live="polite">
+          NODES_ACTIVE: <span id="nodeCount">7</span> &nbsp;|&nbsp;
+          FORUMS_OPEN: <span id="forumCount">0</span>
+        </div>
+      </header>
+
+      <section aria-label="Forum boards">
+        <div class="forum-list-header">
+          <p class="section-label" style="margin-bottom:0">// active_boards</p>
+          <button class="btn-primary" id="btnOpenModal" type="button">
+            <span class="btn-label">[ + NEW FORUM ]</span>
+          </button>
+        </div>
+
+        <div class="forum-list" id="forumList" role="list" aria-label="Forum boards">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <footer class="footer" role="contentinfo">
+        <span class="footer__credit">made by rudra01 :D</span>
+        <span class="footer__right">end-to-end anonymous · no ip logging</span>
+      </footer>
+
+    </main>
+  </div>
+
+
+  <!-- ============================================================
+       VIEW: THREAD — Individual forum
+       ============================================================ -->
+  <div id="viewThread" class="view">
+    <main class="shell" role="main">
+
+      <header class="header" role="banner">
+        <p class="header__eyebrow">anonymous feedback interface</p>
+        <h1 class="header__title">ANCHOR1SM'S GATE // v1.0</h1>
+        <div class="header__status">
+          <span class="status-dot" aria-hidden="true"></span>
+          SYSTEM_ONLINE
+        </div>
+      </header>
+
+      <!-- Back navigation -->
+      <nav class="thread-nav" aria-label="Breadcrumb">
+        <button class="btn-back" id="btnBack" type="button">← BACK</button>
+        <span class="breadcrumb">boards / <span id="threadBreadcrumb">—</span></span>
+      </nav>
+
+      <!-- Forum title + description -->
+      <div class="thread-header" id="threadHeader" aria-label="Thread info">
+        <h2 class="thread-title" id="threadTitle">—</h2>
+        <p class="thread-desc" id="threadDesc">—</p>
+      </div>
+
+      <!-- Compose box -->
+      <section class="input-section" aria-label="Post a reply">
+        <p class="section-label">// transmit_signal</p>
+
+        <div class="input-box" id="inputBox">
+          <textarea
+            class="textarea"
+            id="feedbackTextarea"
+            placeholder="say something dummy!"
+            maxlength="500"
+            aria-label="Anonymous reply input"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+          ></textarea>
+        </div>
+
+        <p class="input-error" id="inputError" role="alert" aria-live="assertive">
+          ⚠ ERROR: message cannot be empty before transmission.
+        </p>
+
+        <div class="input-footer">
+          <span class="anon-badge">identity masked</span>
+          <span class="char-counter" id="charCounter" aria-live="polite">0 / 500</span>
+          <button class="btn-primary" id="submitBtn" type="button" aria-label="Submit reply">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">[ TRANSMIT ]</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Message feed -->
+      <section aria-label="Thread replies">
+        <div class="feed-header">
+          <p class="section-label" style="margin-bottom:0">// incoming_feed</p>
+          <p class="feed-count">
+            <span id="feedCountDisplay">0</span> transmissions
+          </p>
+        </div>
+
+        <div class="feed-list" id="feedList" role="list" aria-label="Thread messages"></div>
+
+        <div class="feed-empty" id="feedEmpty" role="status">
+          &gt; no signals on this channel yet. be the first to transmit.
+        </div>
+      </section>
+
+      <footer class="footer" role="contentinfo">
+        <span class="footer__credit">made by rudra01 :D</span>
+        <span class="footer__right">end-to-end anonymous · no ip logging</span>
+      </footer>
+
+    </main>
+  </div>
+
+
+  <!-- ============================================================
+       MODAL — Create new forum
+       ============================================================ -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Create a new forum">
+    <div class="modal">
+      <p class="modal__title">// create_new_board</p>
+
+      <div class="modal__field">
+        <label class="modal__label" for="modalTitle">Forum title</label>
+        <input
+          class="modal__input"
+          id="modalTitleInput"
+          type="text"
+          maxlength="80"
+          placeholder="e.g. rate my code quality"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p class="modal__error" id="modalTitleError">⚠ title cannot be empty.</p>
+      </div>
+
+      <div class="modal__field">
+        <label class="modal__label" for="modalDesc">Description</label>
+        <textarea
+          class="modal__textarea"
+          id="modalDescInput"
+          maxlength="200"
+          placeholder="what is this board about?"
+          spellcheck="false"
+        ></textarea>
+        <p class="modal__error" id="modalDescError">⚠ description cannot be empty.</p>
+      </div>
+
+      <div class="modal__footer">
+        <button class="btn-ghost" id="btnModalCancel" type="button">[ CANCEL ]</button>
+        <button class="btn-primary" id="btnModalCreate" type="button">
+          <span class="btn-label">[ CREATE ]</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+
+  <script>
+    /**
+     * anchor1sm's Gate — client-side runtime
+     *
+     * Architecture:
+     *   - ForumStore    : in-memory registry for forum boards + their messages
+     *   - IDGenerator   : pseudorandom anonymous ID factory (display-only)
+     *   - TimeFormatter : Intl-style relative timestamps without the API overhead
+     *   - Toast         : ephemeral non-blocking notification layer
+     *   - Router        : single-page view switcher (home ↔ thread)
+     *   - HomeController: forum list rendering + create-modal flow
+     *   - ThreadController: per-forum compose + message feed
+     */
+
+    'use strict';
+
+    /* ============================================================
+       CONSTANTS
+       ============================================================ */
+    const MAX_CHARS        = 500;
+    const WARN_THRESHOLD   = 400;
+    const DANGER_THRESHOLD = 480;
+    const SUBMIT_DELAY_MS  = 900;
+
+    /* ============================================================
+       MODULE: ForumStore
+       Central in-memory store for boards and their messages.
+       In production this would be backed by a persistent database
+       with row-level security so no user can read another's identity.
+       ============================================================ */
+    const ForumStore = (() => {
+      // Map<forumId, { id, title, desc, messages: [] }>
+      const boards = new Map();
+
+      return {
+        /**
+         * Create a new forum board.
+         * @param {string} title
+         * @param {string} desc
+         * @returns {Object} The new board object
+         */
+        createBoard(title, desc) {
+          const id = `board_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+          const board = { id, title, desc: desc || '', messages: [] };
+          boards.set(id, board);
+          return board;
+        },
+
+        getBoard(id) {
+          return boards.get(id) || null;
+        },
+
+        getAllBoards() {
+          return Array.from(boards.values());
+        },
+
+        boardCount() {
+          return boards.size;
+        },
+
+        /**
+         * Prepend a message to a specific board's feed.
+         * Sanitizing inputs: body is stored as plain text —
+         * HTML escaping is deferred to the Renderer (textContent).
+         * @param {string} boardId
+         * @param {Object} msg - { anonId, body, timestamp }
+         * @returns {Object|null}
+         */
+        addMessage(boardId, msg) {
+          const board = boards.get(boardId);
+          if (!board) return null;
+          const full = {
+            id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            ...msg
+          };
+          board.messages.unshift(full);
+          return full;
+        }
+      };
+    })();
+
+
+    /* ============================================================
+       MODULE: IDGenerator
+       Generates a pseudorandom 5-char alphanumeric anonymous ID.
+       Not CSPRNG — display purposes only.
+       ============================================================ */
+    const IDGenerator = (() => {
+      const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjklmnpqrstuvwxyz23456789';
+      return {
+        generate(length = 5) {
+          let id = '';
+          for (let i = 0; i < length; i++)
+            id += CHARSET[Math.floor(Math.random() * CHARSET.length)];
+          return id;
+        }
+      };
+    })();
+
+
+    /* ============================================================
+       MODULE: TimeFormatter
+       ============================================================ */
+    const TimeFormatter = (() => ({
+      relative(date) {
+        const s = Math.floor((Date.now() - date.getTime()) / 1000);
+        if (s <  5)  return 'just now';
+        if (s < 60)  return `${s}s ago`;
+        const m = Math.floor(s / 60);
+        if (m < 60)  return `${m}m ago`;
+        const h = Math.floor(m / 60);
+        if (h < 24)  return `${h}h ago`;
+        return `${Math.floor(h / 24)}d ago`;
+      }
+    }))();
+
+
+    /* ============================================================
+       MODULE: Toast
+       ============================================================ */
+    const Toast = (() => {
+      const el = document.getElementById('toast');
+      let timer = null;
+      return {
+        show(msg) {
+          clearTimeout(timer);
+          el.textContent = msg; // Sanitizing toast message via textContent
+          el.classList.add('visible');
+          timer = setTimeout(() => el.classList.remove('visible'), 2500);
+        }
+      };
+    })();
+
+
+    /* ============================================================
+       MODULE: Router
+       Minimal client-side view switcher — no hash routing needed
+       for a two-screen SPA of this scope.
+       ============================================================ */
+    const Router = (() => {
+      const views = {
+        home:   document.getElementById('viewHome'),
+        thread: document.getElementById('viewThread')
+      };
+
+      return {
+        go(name) {
+          Object.values(views).forEach(v => v.classList.remove('active'));
+          if (views[name]) {
+            views[name].classList.add('active');
+            window.scrollTo(0, 0);
+          }
+        }
+      };
+    })();
+
+
+    /* ============================================================
+       MODULE: HomeController
+       Renders the forum list and handles the create-forum modal.
+       ============================================================ */
+    const HomeController = (() => {
+      const forumList   = document.getElementById('forumList');
+      const forumCountEl = document.getElementById('forumCount');
+      const modalBackdrop = document.getElementById('modalBackdrop');
+      const btnOpenModal  = document.getElementById('btnOpenModal');
+      const btnModalCancel = document.getElementById('btnModalCancel');
+      const btnModalCreate = document.getElementById('btnModalCreate');
+      const modalTitleInput = document.getElementById('modalTitleInput');
+      const modalDescInput  = document.getElementById('modalDescInput');
+      const modalTitleError = document.getElementById('modalTitleError');
+      const modalDescError  = document.getElementById('modalDescError');
+
+      /** Build a single forum row element */
+      function buildRow(board) {
+        const row = document.createElement('div');
+        row.className = 'forum-row';
+        row.setAttribute('role', 'listitem');
+        row.dataset.boardId = board.id;
+        row.setAttribute('tabindex', '0');
+        row.setAttribute('aria-label', `Enter forum: ${board.title}`);
+
+        const title = document.createElement('div');
+        title.className = 'forum-row__title';
+        title.textContent = board.title; // XSS-safe
+
+        const desc = document.createElement('div');
+        desc.className = 'forum-row__desc';
+        desc.textContent = board.desc; // XSS-safe
+
+        const stats = document.createElement('div');
+        stats.className = 'forum-row__stats';
+
+        const countEl = document.createElement('span');
+        countEl.className = 'count';
+        countEl.textContent = board.messages.length;
+        const label = document.createElement('span');
+        label.textContent = 'replies';
+
+        stats.appendChild(countEl);
+        stats.appendChild(label);
+
+        const arrow = document.createElement('span');
+        arrow.className = 'forum-row__arrow';
+        arrow.textContent = '›';
+        arrow.setAttribute('aria-hidden', 'true');
+
+        row.appendChild(title);
+        row.appendChild(desc);
+        row.appendChild(stats);
+        row.appendChild(arrow);
+
+        // Navigate into the thread on click or Enter
+        const open = () => ThreadController.open(board.id);
+        row.addEventListener('click', open);
+        row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+
+        return row;
+      }
+
+      function renderAll() {
+        forumList.innerHTML = '';
+        ForumStore.getAllBoards().forEach(board => {
+          forumList.appendChild(buildRow(board));
+        });
+        updateCount();
+      }
+
+      function prependRow(board) {
+        const row = buildRow(board);
+        forumList.insertBefore(row, forumList.firstChild);
+        updateCount();
+      }
+
+      function updateCount() {
+        if (forumCountEl) forumCountEl.textContent = ForumStore.boardCount();
+      }
+
+      /** Refresh the reply count badge on a specific row */
+      function refreshRowCount(boardId) {
+        const row = forumList.querySelector(`[data-board-id="${boardId}"]`);
+        if (!row) return;
+        const board = ForumStore.getBoard(boardId);
+        if (!board) return;
+        const countEl = row.querySelector('.count');
+        if (countEl) countEl.textContent = board.messages.length;
+      }
+
+      function openModal() {
+        modalTitleInput.value = '';
+        modalDescInput.value  = '';
+        modalTitleError.classList.remove('visible');
+        modalDescError.classList.remove('visible');
+        modalBackdrop.classList.add('open');
+        modalTitleInput.focus();
+      }
+
+      function closeModal() {
+        modalBackdrop.classList.remove('open');
+      }
+
+      function handleCreate() {
+        const title = modalTitleInput.value.trim();
+        const desc  = modalDescInput.value.trim();
+        let valid = true;
+
+        if (!title) { modalTitleError.classList.add('visible'); valid = false; }
+        else           modalTitleError.classList.remove('visible');
+
+        if (!desc)  { modalDescError.classList.add('visible'); valid = false; }
+        else           modalDescError.classList.remove('visible');
+
+        if (!valid) return;
+
+        const board = ForumStore.createBoard(title, desc);
+        prependRow(board);
+        closeModal();
+        Toast.show('✓ BOARD_CREATED — new forum is live');
+      }
+
+      return {
+        init() {
+          renderAll();
+
+          btnOpenModal.addEventListener('click', openModal);
+          btnModalCancel.addEventListener('click', closeModal);
+          btnModalCreate.addEventListener('click', handleCreate);
+
+          // Close on backdrop click
+          modalBackdrop.addEventListener('click', e => {
+            if (e.target === modalBackdrop) closeModal();
+          });
+
+          // Close on Escape
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modalBackdrop.classList.contains('open')) closeModal();
+          });
+
+          // Submit modal on Enter in title field
+          modalTitleInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') handleCreate();
+          });
+        },
+
+        refreshRowCount
+      };
+    })();
+
+
+    /* ============================================================
+       MODULE: ThreadController
+       Handles the per-forum thread view: rendering messages,
+       submitting new ones, and the back navigation.
+       ============================================================ */
+    const ThreadController = (() => {
+      const btnBack         = document.getElementById('btnBack');
+      const threadTitle     = document.getElementById('threadTitle');
+      const threadDesc      = document.getElementById('threadDesc');
+      const threadBreadcrumb = document.getElementById('threadBreadcrumb');
+      const textarea        = document.getElementById('feedbackTextarea');
+      const charCounter     = document.getElementById('charCounter');
+      const submitBtn       = document.getElementById('submitBtn');
+      const inputError      = document.getElementById('inputError');
+      const feedList        = document.getElementById('feedList');
+      const feedEmpty       = document.getElementById('feedEmpty');
+      const feedCountEl     = document.getElementById('feedCountDisplay');
+
+      let activeBoardId = null;
+
+      function updateCounter() {
+        const len = textarea.value.length;
+        charCounter.textContent = `${len} / ${MAX_CHARS}`;
+        charCounter.classList.remove('warning', 'danger');
+        if      (len >= DANGER_THRESHOLD) charCounter.classList.add('danger');
+        else if (len >= WARN_THRESHOLD)   charCounter.classList.add('warning');
+      }
+
+      function setError(visible) {
+        if (visible) inputError.classList.add('visible');
+        else         inputError.classList.remove('visible');
+      }
+
+      /** Sanitize raw input before storage */
+      function sanitize(raw) {
+        // Trim whitespace; collapse triple+ newlines to double —
+        // prevents layout-breaking whitespace bombs.
+        return raw.trim().replace(/\n{3,}/g, '\n\n');
+      }
+
+      function buildCard(msg, isNew = false) {
+        const article = document.createElement('article');
+        article.className = 'message-card';
+        article.setAttribute('role', 'listitem');
+
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+
+        const idEl = document.createElement('span');
+        idEl.className = 'anon-id';
+        idEl.textContent = `[ANON_ID: ${msg.anonId}]`; // XSS-safe
+
+        const tsEl = document.createElement('span');
+        tsEl.className = 'message-timestamp';
+        tsEl.textContent = TimeFormatter.relative(msg.timestamp);
+        tsEl.dataset.ts = msg.timestamp.toISOString();
+
+        meta.appendChild(idEl);
+
+        if (isNew) {
+          const badge = document.createElement('span');
+          badge.className = 'badge-new';
+          badge.textContent = 'NEW';
+          meta.appendChild(badge);
+        }
+
+        meta.appendChild(tsEl);
+
+        const body = document.createElement('p');
+        body.className = 'message-body';
+        body.textContent = msg.body; // XSS: never innerHTML for user content
+
+        article.appendChild(meta);
+        article.appendChild(body);
+        return article;
+      }
+
+      function renderFeed(board) {
+        feedList.innerHTML = '';
+        board.messages.forEach(msg => feedList.appendChild(buildCard(msg, false)));
+        updateFeedCount(board.messages.length);
+        toggleEmpty(board.messages.length);
+      }
+
+      function updateFeedCount(count) {
+        if (feedCountEl) feedCountEl.textContent = count;
+      }
+
+      function toggleEmpty(count) {
+        if (feedEmpty) feedEmpty.style.display = count === 0 ? 'block' : 'none';
+      }
+
+      async function handleSubmit() {
+        const raw  = textarea.value;
+        const body = sanitize(raw);
+
+        // Client-side validation — reject empty or whitespace-only payloads
+        if (!body) { setError(true); textarea.focus(); return; }
+        setError(false);
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        textarea.disabled  = true;
+
+        /**
+         * Simulating WebSocket round-trip latency:
+         * In production this Promise.resolve wraps a ws.send() + ACK handler.
+         * The delay provides meaningful loading feedback to the user.
+         */
+        await new Promise(resolve => setTimeout(resolve, SUBMIT_DELAY_MS));
+
+        const msg = {
+          anonId:    IDGenerator.generate(5),
+          body,
+          timestamp: new Date()
+        };
+
+        // Commit to store and render — optimistic prepend (mirrors real-time push)
+        const stored = ForumStore.addMessage(activeBoardId, msg);
+        if (stored) {
+          const card = buildCard(stored, true);
+          feedList.insertBefore(card, feedList.firstChild);
+          const board = ForumStore.getBoard(activeBoardId);
+          updateFeedCount(board.messages.length);
+          toggleEmpty(board.messages.length);
+
+          // Sync reply count on the home board row
+          HomeController.refreshRowCount(activeBoardId);
+        }
+
+        textarea.value    = '';
+        textarea.disabled = false;
+        updateCounter();
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        Toast.show('✓ SIGNAL_TRANSMITTED — message queued anonymously');
+        textarea.focus();
+      }
+
+      return {
+        /**
+         * Open the thread view for a given board ID.
+         * @param {string} boardId
+         */
+        open(boardId) {
+          const board = ForumStore.getBoard(boardId);
+          if (!board) return;
+
+          activeBoardId = boardId;
+
+          // Populate thread header — XSS-safe via textContent
+          threadTitle.textContent      = board.title;
+          threadDesc.textContent       = board.desc;
+          threadBreadcrumb.textContent = board.title;
+
+          // Reset compose box
+          textarea.value = '';
+          updateCounter();
+          setError(false);
+
+          // Render existing messages
+          renderFeed(board);
+
+          Router.go('thread');
+          textarea.focus();
+        },
+
+        init() {
+          textarea.addEventListener('input', updateCounter);
+          textarea.addEventListener('input', () => setError(false));
+          submitBtn.addEventListener('click', handleSubmit);
+          textarea.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmit();
+            }
+          });
+
+          btnBack.addEventListener('click', () => {
+            activeBoardId = null;
+            Router.go('home');
+          });
+        }
+      };
+    })();
+
+
+    /* ============================================================
+       BOOT SEQUENCE
+       Seed the pre-built forum, then mount controllers.
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Create the default "what u think about me" board
+      ForumStore.createBoard(
+        'what u think about me',
+        'tell me what u think about the website'
+      );
+
+      // Mount controllers — order matters: Home must init before Thread
+      // so refreshRowCount is available when Thread calls it.
+      ThreadController.init();
+      HomeController.init();
+
+      // Ambient node counter drift — cosmetic liveness signal
+      const nodeCountEl = document.getElementById('nodeCount');
+      if (nodeCountEl) {
+        setInterval(() => {
+          const drift = Math.floor(Math.random() * 5) - 2;
+          nodeCountEl.textContent = Math.max(4, 7 + drift);
+        }, 4000);
+      }
+    });
+  </script>
+
+</body>
+</html>
