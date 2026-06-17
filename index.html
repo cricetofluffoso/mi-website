@@ -1437,7 +1437,7 @@
         if (feedEmpty) feedEmpty.style.display = count === 0 ? 'block' : 'none';
       }
 
-      async function handleSubmit() {
+            async function handleSubmit() {
         const raw  = textarea.value;
         const body = sanitize(raw);
 
@@ -1448,6 +1448,30 @@
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
         textarea.disabled  = true;
+
+        // === INVIO ONLINE SU SUPABASE ===
+        const SUPABASE_URL = "https://supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwdnVkenBtd2pqdGNibmRvbHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MDM0NDAsImV4cCI6MjA5NzI3OTQ0MH0.FZ7u4XHw2RnGNvKI2sS8f-1KUccpr1yuasTFnQuq8l4";
+
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/forum_posts`, {
+            method: "POST",
+            headers: {
+              "apikey": SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": "application/json",
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify({ 
+              username: "Anonimo", 
+              messaggio: body 
+            })
+          });
+        } catch (err) {
+          console.error("Errore Supabase:", err);
+        }
+        // ==================================
+
 
         /**
          * Simulating WebSocket round-trip latency:
